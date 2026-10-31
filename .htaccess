@@ -1,0 +1,57 @@
+# FiberAssist - Root .htaccess
+# URL Rewriting & Security Configuration
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /FiberAssist/
+
+    # Block direct access to src/ directory
+    RewriteRule ^src/ - [F,L]
+
+    # Block access to sensitive files
+    RewriteRule ^(database|scripts|tests|workflows)/.*$ - [F,L]
+    
+    # API Routes - Route to src/api/*.php
+    RewriteRule ^api/(.+)$ src/api/$1.php [L,QSA]
+    
+    # Dashboard Route
+    RewriteRule ^dashboard/?$ public/dashboard/index.html [L]
+    RewriteRule ^dashboard/(.+)$ public/dashboard/$1 [L]
+    
+    # Chat Route
+    RewriteRule ^chat/?$ public/chat/index.html [L]
+    RewriteRule ^chat/(.+)$ public/chat/$1 [L]
+    
+    # Assets Route
+    RewriteRule ^assets/(.+)$ public/assets/$1 [L]
+    
+    # Default route to public/dashboard
+    RewriteRule ^$ public/dashboard/index.html [L]
+</IfModule>
+
+# CORS Headers for API
+<IfModule mod_headers.c>
+    <FilesMatch "\.(php)$">
+        Header set Access-Control-Allow-Origin "*"
+        Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+        Header set Access-Control-Allow-Headers "Content-Type, Authorization"
+    </FilesMatch>
+</IfModule>
+
+# Security Headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Prevent directory listing
+Options -Indexes
+
+# PHP Configuration
+<IfModule mod_php.c>
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+    php_value max_execution_time 300
+    php_value max_input_time 300
+</IfModule>

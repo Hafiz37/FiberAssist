@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi WhatsApp - Diagnosa Mandiri Internet ISP</title>
+    <!-- Google Fonts & FontAwesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation / Quick Actions -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <img src="../logo/logo1.jpeg" alt="NetFix Bot Logo" style="width: 34px; height: 34px; border-radius: 8px; object-fit: cover; margin-right: 0.5rem; border: 1px solid rgba(255,255,255,0.2);">
+                    <h2>NetFix Bot Simulasi</h2>
+                </div>
+                <p class="subtitle">Navigasi Pertanyaan Interaktif (F02)</p>
+            </div>
+
+            <div class="session-card">
+                <label for="phoneInput"><i class="fa-solid fa-phone"></i> Nomor WhatsApp Simulasi</label>
+                <div class="phone-input-group">
+                    <input type="text" id="phoneInput" value="08123456789" placeholder="08xxxxxxxxxx">
+                    <button id="btnSetPhone" title="Ganti Sesi No. WA"><i class="fa-solid fa-check"></i></button>
+                </div>
+                <div class="session-info">
+                    <span>Sesi Aktif: <strong id="activePhoneDisplay">08123456789</strong></span>
+                    <span class="status-indicator"><i class="fa-solid fa-circle text-online"></i> Online</span>
+                </div>
+            </div>
+
+            <div class="quick-scenarios">
+                <h3><i class="fa-solid fa-bolt"></i> Tombol Aksi Cepat</h3>
+                <div class="scenario-buttons">
+                    <button class="btn-scenario" onclick="sendQuickMessage('START')">
+                        <i class="fa-solid fa-play"></i> Mulai Diagnosa (START)
+                    </button>
+                    <button class="btn-scenario" onclick="sendQuickMessage('1')">
+                        <i class="fa-solid fa-1"></i> Opsi 1 (Internet Mati)
+                    </button>
+                    <button class="btn-scenario" onclick="sendQuickMessage('2')">
+                        <i class="fa-solid fa-2"></i> Opsi 2 (Internet Lambat)
+                    </button>
+                    <button class="btn-scenario btn-danger" onclick="sendQuickMessage('RESET')">
+                        <i class="fa-solid fa-rotate-left"></i> Reset Sesi Chat
+                    </button>
+                </div>
+            </div>
+
+            <div class="nav-links">
+                <a href="../dashboard/" target="_blank" class="nav-btn">
+                    <i class="fa-solid fa-chart-line"></i> Buka Dashboard CS Monitoring
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area (WhatsApp UI Clone) -->
+        <main class="chat-wrapper">
+            <!-- Chat Header -->
+            <header class="chat-header">
+                <div class="bot-avatar">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div class="bot-info">
+                    <h3>Bot Support Internet ISP <i class="fa-solid fa-circle-check text-verified"></i></h3>
+                    <p id="botStatusText">Layanan Diagnosa Mandiri 24/7 (Forward Chaining)</p>
+                </div>
+                <div class="header-actions">
+                    <button onclick="clearChatHistory()" title="Bersihkan Tampilan Chat"><i class="fa-solid fa-trash-can"></i></button>
+                </div>
+            </header>
+
+            <!-- Chat Messages Window -->
+            <section class="chat-messages" id="chatMessages">
+                <!-- Messages will be rendered here dynamically -->
+            </section>
+
+            <!-- Quick Reply Chips -->
+            <div class="quick-replies" id="quickRepliesContainer">
+                <button class="chip" onclick="sendQuickMessage('1')">1️⃣ Pilihan 1</button>
+                <button class="chip" onclick="sendQuickMessage('2')">2️⃣ Pilihan 2</button>
+                <button class="chip" onclick="sendQuickMessage('RESET')">🔄 Reset Sesi</button>
+            </div>
+
+            <!-- Chat Input Footer -->
+            <footer class="chat-footer">
+                <form id="chatForm" onsubmit="handleChatSubmit(event)">
+                    <input type="text" id="userInput" placeholder="Ketik balasan (contoh: 1, 2, START)..." autocomplete="off">
+                    <button type="submit" id="btnSend">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+            </footer>
+        </main>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

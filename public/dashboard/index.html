@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetFix Bot - Otomasi Diagnosa Gangguan Internet</title>
+    <link rel="stylesheet" href="css/style.css?v=1792301521">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <!-- 1. LOGIN OVERLAY SCREEN -->
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-icon">
+                    <img src="../logo/logo2.jpeg" alt="NetFix Bot Logo">
+                </div>
+                <h2>NetFix Bot Portal</h2>
+                <p>Otomasi Diagnosa Gangguan Internet via WhatsApp</p>
+            </div>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div id="loginAlert" class="alert error" style="display: none;"></div>
+
+                <div class="form-group">
+                    <label for="loginUsername"><i class="fa-solid fa-user"></i> Username</label>
+                    <input type="text" id="loginUsername" placeholder="Masukkan username..." required autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword"><i class="fa-solid fa-lock"></i> Password</label>
+                    <input type="password" id="loginPassword" placeholder="Masukkan password..." required autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn-login" id="btnLoginSubmit">
+                    <i class="fa-solid fa-right-to-bracket"></i> Masuk Sistem
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. MAIN DASHBOARD CONTENT (Locked until login) -->
+    <div class="container" id="dashboardContainer" style="display: none;">
+        <!-- Header -->
+        <header>
+            <div class="brand">
+                <div class="brand-icon">
+                    <img src="../logo/logo2.jpeg" alt="NetFix Bot Logo">
+                </div>
+                <div>
+                    <h1>NetFix Bot - CS Monitoring Dashboard</h1>
+                    <p>Otomasi Diagnosa Gangguan Jaringan Fiber Optik Berbasis Sistem Pakar & WhatsApp Bot</p>
+                </div>
+            </div>
+
+            <!-- User Profile & Action Bar -->
+            <div class="header-user-bar">
+                <div class="user-info-card">
+                    <div class="avatar" id="userAvatar">U</div>
+                    <div class="user-details">
+                        <span class="user-name" id="userFullName">Pengguna</span>
+                        <span class="role-badge" id="userRoleBadge">ROLE</span>
+                    </div>
+                </div>
+
+                <button id="btnManagePakar" class="tab-btn btn-pakar" onclick="openPakarModal()" style="display: none;">
+                    <i class="fa-solid fa-brain"></i> Kelola Data Pakar
+                </button>
+
+                <button id="btnManageUsers" class="tab-btn btn-admin" onclick="openUserModal()" style="display: none;">
+                    <i class="fa-solid fa-users-gear"></i> Kelola User
+                </button>
+
+                <button id="btnManageSettings" class="tab-btn btn-settings" onclick="openSettingsModal()" style="display: none;">
+                    <i class="fa-solid fa-gear"></i> Pengaturan WA
+                </button>
+
+                <button id="btnManageSesi" class="tab-btn btn-sesi" onclick="openSesiModal()">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Diagnosa WA
+                </button>
+
+                <a href="../chat/" target="_blank" class="tab-btn btn-wa">
+                    <i class="fa-brands fa-whatsapp"></i> Chat Simulator
+                </a>
+
+                <button onclick="loadTickets()" class="tab-btn active">
+                    <i class="fa-solid fa-rotate-right"></i> Refresh
+                </button>
+
+                <button onclick="handleLogout()" class="tab-btn btn-logout">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Tab Navigation -->
+        <div class="main-tab-navigation">
+            <button class="main-tab-btn" onclick="switchMainTab('laporan', this)">
+                <i class="fa-solid fa-clipboard-list"></i> Semua Laporan
+            </button>
+            <button class="main-tab-btn active" onclick="switchMainTab('tiket', this)">
+                <i class="fa-solid fa-ticket"></i> Tiket Teknisi
+            </button>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Total Tiket</h3>
+                    <p id="stat-total">0</p>
+                </div>
+                <div class="stat-icon icon-blue">
+                    <i class="fa-solid fa-ticket"></i>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Belum Diproses (Open)</h3>
+                    <p id="stat-open">0</p>
+                </div>
+                <div class="stat-icon icon-red">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Sedang Diproses</h3>
+                    <p id="stat-progress">0</p>
+                </div>
+                <div class="stat-icon icon-yellow">
+                    <i class="fa-solid fa-spinner"></i>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Selesai (Resolved)</h3>
+                    <p id="stat-resolved">0</p>
+                </div>
+                <div class="stat-icon icon-green">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics & Charts Grid -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3><i class="fa-solid fa-chart-pie"></i> Distribusi Jenis Gangguan (Top Diagnosa)</h3>
+                </div>
+                <div class="chart-body">
+                    <canvas id="chartDiagnosa"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3><i class="fa-solid fa-chart-line"></i> Tren Tiket Gangguan Masuk</h3>
+                </div>
+                <div class="chart-body">
+                    <canvas id="chartTren"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Bar -->
+        <div class="controls-bar">
+            <div class="filter-tabs" id="statusFilterTabs">
+                <button class="tab-btn active" onclick="filterStatus('ALL', this)">Semua</button>
+                <button class="tab-btn" onclick="filterStatus('OPEN', this)">OPEN</button>
+                <button class="tab-btn" onclick="filterStatus('IN_PROGRESS', this)">IN PROGRESS</button>
+                <button class="tab-btn" onclick="filterStatus('RESOLVED', this)">RESOLVED</button>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchInput" onkeyup="filterSearch()" placeholder="Cari No. Tiket atau No. WA...">
+            </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="table-card">
+            <table>
+                <thead id="tableHeader">
+                    <tr>
+                        <th>No. Tiket</th>
+                        <th>No. WA Pelanggan</th>
+                        <th>Hasil Diagnosa</th>
+                        <th>Tanggal Masuk</th>
+                        <th>Status Tiket</th>
+                        <th>Aksi / Update Status</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                            Memuat data tiket...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Detail Tiket -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 id="modalTitle">Detail Tiket #---</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-row">
+                    <label>No. WhatsApp Pelanggan</label>
+                    <p id="modalNoWA">-</p>
+                </div>
+                <div class="detail-row" id="modalNoTiketRow" style="display:none;">
+                    <label>No. Tiket</label>
+                    <p id="modalNoTiket">-</p>
+                </div>
+                <div class="detail-row">
+                    <label>Kerusakan / Diagnosa Pakar</label>
+                    <p id="modalKerusakan">-</p>
+                </div>
+                <div class="detail-row" id="modalFaktaRow" style="display:none;">
+                    <label>Fakta Gejala Terkumpul</label>
+                    <p id="modalFakta">-</p>
+                </div>
+                <div class="detail-row">
+                    <label>Detail Gejala & Rule Matching</label>
+                    <p id="modalDetail">-</p>
+                </div>
+                <div class="detail-row">
+                    <label>Rekomendasi Solusi Penanganan</label>
+                    <p id="modalSolusi" style="color: var(--resolved-color);">-</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kelola User (Khusus Administrator) -->
+    <div class="modal-overlay" id="userModal">
+        <div class="modal-card modal-lg">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-users-gear"></i> Manajemen Pengguna (CS & Administrator)</h2>
+                <button class="modal-close" onclick="closeUserModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="userModalAlert" class="alert error" style="display: none;"></div>
+
+                <div class="add-user-box">
+                    <h3><i class="fa-solid fa-user-plus"></i> Tambah Akun Baru</h3>
+                    <form id="addUserForm" onsubmit="handleAddUser(event)">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" id="newUsername" placeholder="Contoh: cs_dani" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nama Lengkap</label>
+                                <input type="text" id="newNamaLengkap" placeholder="Contoh: Dani Ramadhan" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="password" id="newPassword" placeholder="Masukkan password..." required>
+                            </div>
+                            <div class="form-group">
+                                <label>Peran (Role)</label>
+                                <select id="newRole">
+                                    <option value="CS">CS (Customer Service)</option>
+                                    <option value="ADMIN">ADMINISTRATOR</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary" style="margin-top: 1rem; width: 100%;">
+                            <i class="fa-solid fa-plus"></i> Simpan User Baru
+                        </button>
+                    </form>
+                </div>
+
+                <h3 style="margin-top: 1.5rem; margin-bottom: 0.75rem;"><i class="fa-solid fa-list-check"></i> Daftar Pengguna Aktif</h3>
+                <div class="table-card" style="margin-bottom: 0;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Nama Lengkap</th>
+                                <th>Role</th>
+                                <th>Tanggal Dibuat</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: var(--text-muted);">Memuat data pengguna...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kelola Data Pakar (Khusus Administrator) -->
+    <div class="modal-overlay" id="pakarModal">
+        <div class="modal-card modal-lg">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-brain"></i> Manajemen Data Pakar & Rules Forward Chaining</h2>
+                <button class="modal-close" onclick="closePakarModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="pakarModalAlert" class="alert error" style="display: none;"></div>
+
+                <!-- Navigasi Sub-Tab Data Pakar -->
+                <div class="subtab-bar">
+                    <button class="subtab-btn active" onclick="switchPakarSubtab('gejala', this)">
+                        <i class="fa-solid fa-stethoscope"></i> 1. Data Gejala
+                    </button>
+                    <button class="subtab-btn" onclick="switchPakarSubtab('kerusakan', this)">
+                        <i class="fa-solid fa-triangle-exclamation"></i> 2. Data Kerusakan & Solusi
+                    </button>
+                    <button class="subtab-btn" onclick="switchPakarSubtab('aturan', this)">
+                        <i class="fa-solid fa-diagram-project"></i> 3. Aturan Forward Chaining
+                    </button>
+                </div>
+
+                <!-- SECTION 1: GEJALA -->
+                <div id="pakarTabGejala" class="pakar-subtab-content">
+                    <div class="add-user-box">
+                        <h3 id="formGejalaTitle"><i class="fa-solid fa-plus-circle"></i> Tambah / Edit Data Gejala</h3>
+                        <form id="gejalaForm" onsubmit="handleSaveGejala(event)">
+                            <input type="hidden" id="gejalaId" value="0">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Kode Gejala</label>
+                                    <input type="text" id="gejalaKode" placeholder="Contoh: G11" required>
+                                </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label>Nama / Judul Gejala</label>
+                                    <input type="text" id="gejalaNama" placeholder="Contoh: Perangkat Router Overheat / Panas" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Pertanyaan Balasan WhatsApp</label>
+                                <textarea id="gejalaTanya" rows="2" placeholder="Contoh: Apakah perangkat router Anda terasa sangat panas?" required style="width:100%; background:rgba(11,19,41,0.8); border:1px solid var(--border-color); color:white; padding:0.8rem; border-radius:12px; font-size:0.9rem; outline:none;"></textarea>
+                            </div>
+                            <div style="display:flex; gap:0.5rem;">
+                                <button type="submit" class="btn-primary" style="flex:1;">
+                                    <i class="fa-solid fa-floppy-disk"></i> Simpan Data Gejala
+                                </button>
+                                <button type="button" class="btn-detail" onclick="resetGejalaForm()">Batal</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="table-card">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Kode</th>
+                                    <th>Nama Gejala</th>
+                                    <th>Pertanyaan WA</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gejalaTableBody">
+                                <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Memuat data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: KERUSAKAN -->
+                <div id="pakarTabKerusakan" class="pakar-subtab-content" style="display: none;">
+                    <div class="add-user-box">
+                        <h3 id="formKerusakanTitle"><i class="fa-solid fa-plus-circle"></i> Tambah / Edit Data Kerusakan & Solusi</h3>
+                        <form id="kerusakanForm" onsubmit="handleSaveKerusakan(event)">
+                            <input type="hidden" id="kerusakanId" value="0">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Kode Kerusakan</label>
+                                    <input type="text" id="kerusakanKode" placeholder="Contoh: K09" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Nama Masalah / Diagnosa</label>
+                                    <input type="text" id="kerusakanNama" placeholder="Contoh: Overheat Modem ZTE" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Penanganan Teknisi?</label>
+                                    <select id="kerusakanTeknisi">
+                                        <option value="0">Tidak (Self-Service / Mandiri)</option>
+                                        <option value="1">Ya (Eskalasi Auto-Tiket Teknisi)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Rekomendasi Solusi Penanganan</label>
+                                <textarea id="kerusakanSolusi" rows="2" placeholder="Contoh: Matikan adaptor router selama 10 menit lalu nyalakan kembali." required style="width:100%; background:rgba(11,19,41,0.8); border:1px solid var(--border-color); color:white; padding:0.8rem; border-radius:12px; font-size:0.9rem; outline:none;"></textarea>
+                            </div>
+                            <div style="display:flex; gap:0.5rem;">
+                                <button type="submit" class="btn-primary" style="flex:1;">
+                                    <i class="fa-solid fa-floppy-disk"></i> Simpan Data Kerusakan
+                                </button>
+                                <button type="button" class="btn-detail" onclick="resetKerusakanForm()">Batal</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="table-card">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Kode</th>
+                                    <th>Nama Kerusakan</th>
+                                    <th>Solusi</th>
+                                    <th>Teknisi?</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="kerusakanTableBody">
+                                <tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Memuat data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SECTION 3: ATURAN (RULES) -->
+                <div id="pakarTabAturan" class="pakar-subtab-content" style="display: none;">
+                    <div class="add-user-box">
+                        <h3 id="formAturanTitle"><i class="fa-solid fa-plus-circle"></i> Tambah / Edit Aturan Rule Forward Chaining</h3>
+                        <form id="aturanForm" onsubmit="handleSaveAturan(event)">
+                            <input type="hidden" id="aturanId" value="0">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Kode Rule</label>
+                                    <input type="text" id="aturanKodeRule" placeholder="Contoh: R09" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Gejala Pertama (Fakta 1)</label>
+                                    <select id="aturanGejala1" required></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Gejala Kedua (Fakta 2)</label>
+                                    <select id="aturanGejala2" required></select>
+                                </div>
+                                <div class="form-group" style="grid-column: span 3;">
+                                    <label>Kesimpulan Diagnosa Kerusakan</label>
+                                    <select id="aturanKerusakan" required></select>
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+                                <button type="submit" class="btn-primary" style="flex:1;">
+                                    <i class="fa-solid fa-diagram-next"></i> Simpan Aturan Rule
+                                </button>
+                                <button type="button" class="btn-detail" onclick="resetAturanForm()">Batal</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="table-card">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Kode Rule</th>
+                                    <th>Gejala 1 (Fakta 1)</th>
+                                    <th>Gejala 2 (Fakta 2)</th>
+                                    <th>Diagnosa Kerusakan</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="aturanTableBody">
+                                <tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Memuat data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Riwayat Sesi Diagnosa WhatsApp -->
+    <div class="modal-overlay" id="sesiModal">
+        <div class="modal-card modal-lg">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-clock-rotate-left"></i> Riwayat Sesi Percakapan WhatsApp (Session Logs)</h2>
+                <button class="modal-close" onclick="closeSesiModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+                    <div class="search-box">
+                        <input type="text" id="searchSesiInput" onkeyup="filterSesiSearch()" placeholder="Cari No. WhatsApp...">
+                    </div>
+                    <button class="btn-detail" onclick="loadSesiLogs()"><i class="fa-solid fa-arrows-rotate"></i> Refresh Log</button>
+                </div>
+
+                <div class="table-card" style="margin-bottom: 0;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID Sesi</th>
+                                <th>No. WhatsApp Pelanggan</th>
+                                <th>Step Machine</th>
+                                <th>Fakta Gejala Terkumpul</th>
+                                <th>Status Sesi</th>
+                                <th>Waktu Terakhir</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sesiTableBody">
+                            <tr>
+                                <td colspan="7" style="text-align: center; color: var(--text-muted);">Memuat riwayat sesi...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Pengaturan WhatsApp Gateway & Webhook Config -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2><i class="fa-brands fa-whatsapp"></i> Konfigurasi Meta WhatsApp Cloud API (Official)</h2>
+                <button class="modal-close" onclick="closeSettingsModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="settingsAlert" class="alert error" style="display: none;"></div>
+
+                <form id="settingsForm" onsubmit="handleSaveSettings(event)">
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-id-badge"></i> Phone Number ID (Meta)</label>
+                        <input type="text" id="cfgPhoneId" placeholder="Contoh: 1224307307443062..." required>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">ID Nomor Telepon yang didapat dari Meta Developers Portal.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-key"></i> Meta Permanent Access Token</label>
+                        <div style="position:relative;">
+                            <input type="password" id="cfgWaToken" placeholder="Salin Permanent Token dari Meta Business Settings..." required style="padding-right: 2.5rem;">
+                            <button type="button" onclick="toggleTokenVisibility()" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted); cursor:pointer;">
+                                <i class="fa-solid fa-eye" id="eyeTokenIcon"></i>
+                            </button>
+                        </div>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">API Token resmi pengirim pesan yang dibuat di System User Meta Business Suite.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-globe"></i> n8n / Tunnelmole Webhook URL</label>
+                        <div style="display:flex; gap:0.5rem;">
+                            <input type="url" id="cfgWebhookUrl" placeholder="https://xxxx.tunnelmole.net/webhook/whatsapp-webhook" required style="flex:1;">
+                            <button type="button" class="btn-detail" onclick="copyWebhookUrl()" style="white-space:nowrap;">
+                                <i class="fa-solid fa-copy"></i> Copy URL
+                            </button>
+                        </div>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">URL Webhook endpoint n8n/server untuk menerima chat WhatsApp otomatis.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-server"></i> PHP Expert Engine Endpoint URL</label>
+                        <input type="url" id="cfgEngineUrl" placeholder="http://localhost/Project Magang/api/diagnosa.php" required>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">URL endpoint PHP tempat n8n mengirim request diagnosa pakar.</span>
+                    </div>
+
+                    <div class="add-user-box" style="margin-top:1.5rem; margin-bottom:1.5rem; font-size:0.8rem; line-height:1.5;">
+                        <h4 style="color:var(--progress-color); margin-bottom:0.4rem;"><i class="fa-solid fa-circle-info"></i> Info Meta Official API:</h4>
+                        <ul style="padding-left:1.2rem; color:var(--text-muted); margin:0;">
+                            <li>100% Aman dari Blokir (Resmi dari Meta/Facebook).</li>
+                            <li>Token disimpan secara aman di server local Anda.</li>
+                        </ul>
+                    </div>
+
+                    <button type="submit" class="btn-primary" style="width:100%;">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan Pengaturan Meta API
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js?v=1792301521"></script>
+</body>
+</html>
